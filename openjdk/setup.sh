@@ -28,5 +28,27 @@ INSTALLDIR=$(cd $1; pwd)
 # 3) "exit 1" : return INSTALL_FAILURE if any failure occurs 
 #               so it will try to run this script later
 
+CUR_DIR=$(cd `dirname $0`; pwd)
+
+JDK_FILE=$(ls ${CUR_DIR}/jdk*.tar.xz 2>/dev/null)
+for packagefile in ${JDK_FILE[@]}; do
+    xz -d ${packagefile}
+done
+
+JDK_FILE=$(ls ${CUR_DIR}/jdk*.tar 2>/dev/null)
+for packagefile in ${JDK_FILE[@]}; do 
+    tar -xvf ${packagefile} -C ${CUR_DIR}/
+    
+    packagedir=${packagefile:0:-4}
+    
+    if [ -d ${packagedir} ] ; then
+        if [ -z "$(grep ${packagedir} /etc/profile)" ] ; then
+           echo "export JAVA_HOME=${packagedir}" >> /etc/profile
+           echo 'export PATH=${JAVA_HOME}/bin:$PATH' >> /etc/profile
+           echo 'export CLASSPATH=.:${JAVA_HOME}/lib/dt.jar:${JAVA_HOME}/lib/tools.jar' >> /etc/profile
+        fi
+    fi
+done
+
 exit 0
 
